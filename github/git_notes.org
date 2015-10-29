@@ -261,3 +261,22 @@ git status / git branch -av
 git add .
 # commit -> push
 #+END_SRC
+** merging change from branch
+*** method 1
+#+BEGIN_SRC 
+git checkout branch
+git submodule update --remote
+git merge --squash master
+git add .
+git commit
+git push
+#+END_SRC
+*** method 2
+#+BEGIN_SRC 
+git checkout branch
+git merge --squash master
+git add .
+git submodule update
+git commit
+git push
+#+END_SRC

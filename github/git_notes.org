@@ -262,21 +262,17 @@ git add .
 # commit -> push
 #+END_SRC
 ** merging change from branch
-*** method 1
 #+BEGIN_SRC 
+git checkout master
+git pull
+git submodule update
 git checkout branch
-git submodule update --remote
 git merge --squash master
 git add .
 git commit
 git push
 #+END_SRC
-*** method 2
+** get latest submodule from remote
 #+BEGIN_SRC 
-git checkout branch
-git merge --squash master
-git add .
-git submodule update
-git commit
-git push
+git submodule update --remote
 #+END_SRC

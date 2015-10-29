@@ -216,9 +216,48 @@ rm -rf <tmp>
 ** bring in new repo to subfolder as submodule (optional)
 #+BEGIN_SRC 
 pushd <big-repo>
-git submodule add <https://github.com:my-user/new-repo>
+git submodule add -b <branch_to_track> <https://github.com:my-user/new-repo> <subfolder>
 # update .gitignore for big repo to whitelist .gitmodules
 git add .
 git commit
 git push
+#+END_SRC
+** use submodule from other repo
+same as above
+** use submodule from other branch
+*** merge from original branch
+#+BEGIN_SRC 
+# may have to do the following to avoid git complains
+# get rid of submodule files first
+git rm -rf <subfolder>
+git reset --hard HEAD
+# now we can switch branch
+git checkout <other_branch>
+git merge -squash <main_branch>
+# fix conflicts
+git commit -m "blah"
+#+END_SRC
+*** add submodule
+#+BEGIN_SRC 
+# .gitsubmodules already list the submodules it tracks
+git submodule init
+git submodule update
+#+END_SRC
+
+* submodule
+** remove submodule
+#+BEGIN_SRC 
+git submodule deinit <folder>
+git rm -rf <folder>
+git commit -m "remove submodule"
+#+END_SRC
+** work on submodule
+#+BEGIN_SRC 
+# cd into the folder
+# make sure it's tracking a branch
+git status / git branch -av
+# change stuff -> commit -> push
+# cd back to parent folder
+git add .
+# commit -> push
 #+END_SRC

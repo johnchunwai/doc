@@ -1,0 +1,69 @@
+* glossary
+** indexer cluster
+| master node            | manage the cluster (choose master/target nodes,             |
+|                        | balance buckets among peers etc)                            |
+| peer nodes             | index, replicate, search data                               |
+| source node            | peer that ingest data and send replication                  |
+| target node            | receive streams of replicated data from source nodes        |
+| replication factor     | how many copies of data in cluster in total                 |
+| search factor          | how many searchable copies of data in cluster               |
+| buckets                | basic units of index storage                                |
+| bucket stage           | hot, warm, code, frozen                                     |
+| search head            | ask master node and send search requests to peers nodes     |
+| complete               | cluster satisfies both search factor and replication factor |
+| valid                  | a cluster has exactly one primary copy of each bucket       |
+| primary bucket         | searchable bucket that participates in a search             |
+| generation             | a snapshot of the set of primary bucket copies              |
+| indexer acknowledgment | when forwarder doesn't get ack from peer, it resends        |
+
+* cluster indexing and searching
+
+** clustered indexing
+- peer node registers with master
+- master rebalances the primary bucket copies across the cluster and
+  starts a new generation with a generation id
+- generation tracks primary buck copies and on which peers they're located
+- master communicates the current gen id to peers and search head
+- peers tracks which bucket copies are primary for each gen
+- source peer ingests data, stores them into hot bucket
+- master gives source peer a list of target peers (same count as
+  replication factor if possible), and which peers should be
+  searchable
+- source streams rawdata in blocks to targets, tells targets if their
+  copy should be searchable
+- targets with searchable start indexing the files
+- when source rolls a hot bucket, it tells master and targets
+
+** cluster searching
+- search heads poll master for latest gen info at regular intervals
+- when gen changes, master give the search heads new gen id and list
+  of peers for that gen
+- search head gives the peers gen id when it inits a search
+- peers use gen id to identify the buckets for the search
+
+** when generation changes
+- master comes online
+- peer joins cluster
+- peer goes down
+- when rebalancing of primary copies occurs (eg. rebalance_primaries)
+
+** when bucket changes stages
+- from hot to warm to cold, nothing
+- from cold to frozen:
+  - first peer informs master
+  - master alerts other peers
+  - when all copies are frozen (delete or archive), master removes the
+    bucket from the list
+
+* admin
+- for multiline data, may need to update
+  $SPLUNK_HOME/etc/apps/search/local/props.conf as follows
+#+BEGIN_SRC 
+[your sourcetype name]
+# don't truncate
+TRUNCATE = 0
+# max lines for an event
+MAX_EVENTS = 10000
+#+END_SRC
+- for large events, better install univeral field extractor from
+  splunk base. otherwise, field extractor will truncate the event

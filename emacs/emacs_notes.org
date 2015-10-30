@@ -1,4 +1,3 @@
-;;; -*- mode: org; -*-
 * Prerequisites
 - install gnu emacs
 - set HOME env variable either in a shell startup script or system level
@@ -86,6 +85,7 @@
 - C-down-mouse-1 :: multi-cursor at mouse pointer
 - C->, C-< :: multi-cursor for next/prev like this
 
+* irony
 - C-M-i :: irony complete (assume irony with company, yasnippet
   - M-<num> :: select <num>-th suggestion
   - M-n, M-p :: next/prev suggestion
@@ -94,6 +94,7 @@
   - C-w :: view source
   - TAB :: yasnippet template
     
+* file and buffer
 - C-x C-f and C-x C-s :: Visiting (opening) and saving
 - C-x b and C-x C-b :: Switching between buffers
   - o, C-o :: open buffer swith point/not switch point
@@ -111,6 +112,7 @@
 - C-x k :: Kill the current buffer
 - M-x revert-buffer :: reload file in buffer
 
+* editing
 - M-\ :: delete space between 2 words
 - C-w, M-w :: Kill region
 - M-d, M-backspace :: Kill forward/bacqkward for word

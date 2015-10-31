@@ -56,6 +56,80 @@
     bucket from the list
 
 * admin
+** help
+#+BEGIN_SRC 
+splunk help commands
+splunk help <command>
+#+END_SRC
+
+** settings files
+*** single instance
+#+BEGIN_SRC 
+# input
+splunk/etc/.../local/inputs.conf
+# index and sourcetype
+splunk/etc/apps/<app_name>/local/*
+# field extraction
+splunk/etc/users/<admin>/<app_name>/local/props.conf
+#+END_SRC
+
+*** multi instance
+
+**** forwarder
+#+BEGIN_SRC 
+# tradehouse/local/inputs.conf
+[monitor blah]
+sourcetype = blah
+index = blah
+
+# system/local/inputs.conf
+[default]
+host = forwarder host
+
+# system/local/outputs.conf
+[indexAndForward]
+index = false
+[tcpout]
+defaultGroup = lion-indexers
+forwardedindex.filter.disable = true
+indexAndForward = false
+[tcpout:lion-indexers]
+server = <list of host for splunk indexers>
+autoLB = true
+#+END_SRC
+
+**** indexer
+#+BEGIN_SRC 
+# inputs.conf
+[default]
+host = <my host>
+[splunktcp://<port where forward send data to>]
+disabled = 0
+queueSize = 10MB
+
+# indexes.conf
+[<index_name>]
+<bucket>Path = <path>
+maxTotalDataSizeMB = <blah>
+maxDataSize = auto_high_volume
+
+# transforms.conf
+data filtering
+field extractions
+
+# props.conf
+[<sourcetype>]
+TRANSFORMS-set = <things in transforms.conf>
+#+END_SRC
+
+
+** data
+*** add data
+#+BEGIN_SRC 
+# use web
+OR
+splunk add monitor /var/log
+#+END_SRC
 - for multiline data, may need to update
   $SPLUNK_HOME/etc/apps/search/local/props.conf as follows
 #+BEGIN_SRC 
@@ -65,5 +139,53 @@ TRUNCATE = 0
 # max lines for an event
 MAX_EVENTS = 10000
 #+END_SRC
-- for large events, better install univeral field extractor from
-  splunk base. otherwise, field extractor will truncate the event
+- set min free space
+#+BEGIN_SRC 
+# do it from Settings -> General
+OR
+splunk set minfreemb 20000
+splunk restart
+#+END_SRC
+-- make sourcetype searchable without index
+#+BEGIN_SRC 
+# edit local/authorize.conf
+# under [role_<usertype>]:
+srchIndexesDefault = main;<other exiting entries>;<+index to be searchable>
+#+END_SRC
+
+*** delete data
+- stop and restart splunk between these commands
+- delete data only
+#+BEGIN_SRC 
+# delete data from a certain index
+splunk clean eventdata -index <index_name>
+#+END_SRC
+- delete data + index
+#+BEGIN_SRC 
+splunk remove index <index_name>
+# may have to clean up index ref from props.conf
+#+END_SRC
+- delete sourcetype
+#+BEGIN_SRC 
+# remove the entries in the local folder that owns the sourcetype
+# remove stanza's from (app|owner)/metadata (../metadata from local)
+# may have to remove field extraction regex from:
+#     splunk/etc/users/<admin>/search/local/props.conf
+# may have to clean up index ref from props.conf
+#+END_SRC
+- delete input
+#+BEGIN_SRC 
+# remove input.conf
+# remove stanza in local/../metadata/local.meta
+#+END_SRC
+
+** remove app from splunk
+#+BEGIN_SRC 
+# figure out the folder name from Apps -> Manage Apps
+sudo /opt/splunk/bin/splunk stop
+sudo /opt/splunk/bin/splunk remove app <folder name>
+OR
+sudo rm -rf /opt/splunk/etc/apps/<folder name>
+sudo rm -rf /opt/splunk/etc/users/*/<folder name> (if exist)
+sudo /opt/splunk/bin/splunk start
+#+END_SRC

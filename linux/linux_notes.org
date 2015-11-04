@@ -88,6 +88,29 @@ curl -L http://install.ohmyz.sh > install.sh
 sh install.sh
 #+END_SRC
 
+* X11 forwarding
+this can be used to render GUI and graphics on windows host to improve
+3d performance for example from linux guest on virtualbox
+- on linux (server side but X11 client)
+#+BEGIN_SRC 
+# in /etc/ssh/sshd_config
+# make sure sshd is installed or use package manager to get it
+X11Forwarding yes
+
+# make sure xauth is installed; if not, apt-get it
+
+# if vbox is using NAT for network
+# add port forwarding for port 22 so that host can hit it
+#+END_SRC
+- on windows (client side X11 server)
+#+BEGIN_SRC 
+# use mobaXterm
+# make sure ssh settings have X11 forwarding enabled
+# display settings have hardware acceleration turned on
+# find VM IP from network settings
+ssh -X -v <user>@<vm ip>
+#+END_SRC
+
 * misc
 ** check ubuntu version, 32/64bit
 #+BEGIN_SRC 

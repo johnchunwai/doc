@@ -216,6 +216,7 @@ rm -rf <tmp>
 ** bring in new repo to subfolder as submodule (optional)
 #+BEGIN_SRC 
 pushd <big-repo>
+# example <branch_to_track> can be master
 git submodule add -b <branch_to_track> <https://github.com:my-user/new-repo> <subfolder>
 # update .gitignore for big repo to whitelist .gitmodules
 git add .

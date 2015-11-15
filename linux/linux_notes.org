@@ -50,7 +50,7 @@ cd <src dir>
 make
 # the following replaces make install and create a deb pkg for uninstall
 sudo checkinstall
-# keep the src folder so we can sudo make uninstall
+# use dpkg -r package_name to uninstall
 #+END_SRC
 
 * for dev on ubuntu

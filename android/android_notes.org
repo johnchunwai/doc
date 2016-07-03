@@ -1,0 +1,15 @@
+* Recovery
+** boot into recovery
+#+BEGIN_SRC 
+galaxy:
+vol_up + menu + power (release power when vibrate, release up + menu on samsung logo)
+#+END_SRC
+** nandroid
+*** twrp
+#+BEGIN_SRC 
+boot into recovery
+select backup
+keep default settings
+select target location
+optional: compression
+#+END_SRC

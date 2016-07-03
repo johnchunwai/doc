@@ -10,6 +10,13 @@ git config user.email "name@users.noreply.github.com"
 
 git clone https://gitrepo-url
 
+clone to non-empty folder
+-------------------------
+git clone https://gitrepo-url tmp
+mv tmp/.git target_dir/.git
+cd target_dir
+git reset -hard HEAD
+
 create proj
 -----------
 nav to dir with proj files

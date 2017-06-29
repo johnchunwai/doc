@@ -27,7 +27,7 @@ POWERLEVEL9K_VIRTUALENV_FOREGROUND='253'
     - for python, add virtualenv plugin
     - don't add virtualenvwrapper plugin if already installed (ref to python_notes.txt)
 
-* Convenient commands
+* File commands
 #+BEGIN_SRC 
 # make dir with parent dirs
 mkdir -p abc/def/ghi

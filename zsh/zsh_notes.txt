@@ -8,6 +8,7 @@
 - install patched powerline fonts from https://github.com/powerline/fonts
   - my customization in .zshrc:
 
+#+BEGIN_SRC 
 ZSH_THEME="powerlevel9k/powerlevel9k"
 POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs virtualenv)
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status history time)
@@ -18,9 +19,79 @@ POWERLEVEL9K_VCS_BACKGROUND='003'
 POWERLEVEL9K_VCS_FOREGROUND='016'
 POWERLEVEL9K_VIRTUALENV_BACKGROUND='002'
 POWERLEVEL9K_VIRTUALENV_FOREGROUND='253'
+#+END_SRC
 
     - for msys2, comment out export PATH so it will use the most recent system one
     - change EDITOR as needed
     - add shortcut for directory by export and then eg. cd $sec_test_dir
     - for python, add virtualenv plugin
     - don't add virtualenvwrapper plugin if already installed (ref to python_notes.txt)
+
+* Convenient commands
+#+BEGIN_SRC 
+# make dir with parent dirs
+mkdir -p abc/def/ghi
+
+# cp with backup
+cp -b file1 file2
+# cp only overwrite if newer (upgrade)
+cp -u file1, file2
+# cp preserve file attr (useful for backup user folders by root)
+cp --preserve=<mode> ...
+# cp copy original file, not symlink
+cp -L ...
+
+# rm without accidentally deleting system files
+rm -r --preserve-root
+
+# cd to prev dir
+cd -
+
+# ls sort by -s size -t time -X extension
+ls -lastX
+
+
+# check the type of file
+file <filename>
+# check type but not show filename and only show mime type, good for scripting
+file -ib <file>
+
+# change file -a access time, -m last modified time, -t create time
+touch -amt <YYMMDDhhmm.ss> <filename>
+
+# gzip/gunzip, -N keep original files, --fastest <1-9>, --best <1-9>
+gzip -N --fastest 3 <files>
+gzip -d <files>
+# gzip utils
+zcat, zcmp, zdiff, zgrep, zegrep, zfgrep
+
+# tar - -exclude <file>, -p preserve permissions, -k prevent accidental overwrite
+#       --append <tarfile1> <tarfile2> -> -u update with newer version of files
+
+# find options
+# -name search by name
+# -iname ignore case
+# -amin, -cmin, -atime, -ctime -> min/hr since last access/change
+# -e <filetype> exclude file type, see man page for valid types
+# -size, -group, -user, -maxdepth, -mindepth, -perm
+# -and, -or, ! -> and/or/not
+# -fprint <file> -> print results to <file>
+
+# find all "regular files" (-type) that do not end with jpg ext, >7M, belong to root,
+# last accessed 1 hr ago, ignoring err msg (2>/dev/null; eg if user doesn't have access to /tmp),
+# and print the result to result.txt
+find /downloads /tmp -size +7M ! -iname "*.jpg" -user root -atime 1 -type f -fprint result.txt 2>dev/null
+
+# find -exec -> execute command for each file found
+# {} -> placeholder for name of file found
+# \; end of command
+# -ok prompt for confirmation before exec command
+find /photos -iname "*jpg" -exec exiv2 mv -r "%Y%m%d-%H%M%S" *.jpg {} \;
+
+# locate <file> -> quick find based on DB
+# updatedb -> force update db
+# whereis -b (binaries) -m (search for man page) -s (src file)
+# which -> which exe to run
+# which -a -> all locations of the command
+
+#+END_SRC

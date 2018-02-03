@@ -1,0 +1,10 @@
+* source
+#+BEGIN_SRC 
+kernel.org
+#+END_SRC
+* building
+** https://kernelnewbies.org/KernelBuild
+#+BEGIN_SRC 
+sudo apt install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
+...
+#+END_SRC

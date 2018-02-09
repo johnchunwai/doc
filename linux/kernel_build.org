@@ -1,0 +1,336 @@
+
+Guide to building the Linux kernel.
+
+* Where do I find the kernel?
+
+The latest source code for the Linux kernel is kept on
+[[http://www.kernel.org/][kernel.org]]. You can either download the full
+source code as a tar ball (not recommended and will take forever to
+download), or you can check out the code from the read-only
+[[http://git.kernel.org/][git repositories]].
+
+* What tools do I need?
+
+To build the Linux kernel from source, you need several tools: git,
+make, gcc, libssl-dev and (optionally) ctags, cscope, and/or
+ncurses-dev. The tool packages may be called something else in your
+Linux distribution, so you may need to search for the package. The
+ncurses-dev tools are used if you "make menuconfig" or "make nconfig".
+
+On Ubuntu, you can get these tools by running:
+
+#+BEGIN_EXAMPLE
+    sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
+#+END_EXAMPLE
+
+On Red Hat based systems like Fedora, Scientific Linux, and CentOS you
+can run:
+
+#+BEGIN_EXAMPLE
+    sudo yum install gcc make git ctags ncurses-devel openssl-devel
+#+END_EXAMPLE
+
+And on SUSE based systems (like SLES and Leap), you can run:
+
+#+BEGIN_EXAMPLE
+    sudo zypper in git gcc ncurses-devel libopenssl-devel ctags cscope
+#+END_EXAMPLE
+
+* Which kernel to build?
+
+If you want to test to see if a bug is fixed then test against the
+latest stable kernel from kernel.org. If you are brave and your system
+is backed up the latest release candidate from Linus's tree is a great
+target. Sometimes the maintainer may want you to use an experimental
+branch from their own git tree. You should use the git URL they gave you
+instead of the git URLs below.
+
+If you're doing development for a new feature, or trying to test a bug
+fix, you should use Linus' tree, or the subsystem maintainer's -next
+tree. Most subsystem maintainers keep their
+[[http://git.kernel.org/][git trees]] on kernel.org. When in doubt, use
+Linus' tree.
+
+If you don't understand what a stable or release candidate kernel is,
+you should read the [[/KernelDevProcess][KernelDevProcess]] page.
+
+** Downloading the latest stable tree
+
+First, checkout the stable kernel git repository:
+
+#+BEGIN_EXAMPLE
+    git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+    cd linux-stable
+#+END_EXAMPLE
+
+Next, find the latest stable kernel tag by running
+
+#+BEGIN_EXAMPLE
+    git tag -l | less
+#+END_EXAMPLE
+
+Find the latest stable kernel by looking for the largest vX.Y.Z values.
+For example, use the v3.1 tag over the v3.0.46 tag. If v3.1.1 is
+available, use that instead of v3.1. The kernel tags that end with -rcX
+are release candidate kernels, not stable kernels.
+
+Now checkout the code associated with that kernel with the command
+
+#+BEGIN_EXAMPLE
+    git checkout -b stable tag
+#+END_EXAMPLE
+
+Where tag is the latest vX.Y.Z tag you found.
+
+** Downloading the latest -rc tree
+
+Check out Linus' tree:
+
+#+BEGIN_EXAMPLE
+    git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+    cd linux
+#+END_EXAMPLE
+
+* Setting up your kernel configuration
+
+Many kernel drivers can be turned on or off, or built as modules. The
+.config file in the kernel source directory determines which drivers are
+built. When you download the source tree, it doesn't come with a .config
+file. You have several options on generating a .config file. The easiest
+is to duplicate your current config.
+
+** Duplicating your current config
+
+If you're trying to see if a bug is fixed, you probably want to
+duplicate the configuration on your running kernel. That config file is
+stored somewhere in /boot/. There might be several files that start with
+config, so you want the one associated with your running kernel. You can
+find that by running =uname -a= and finding the config file that ends
+with your kernel version number. Copy that file into the source
+directory as .config. Or just run this command:
+
+#+BEGIN_EXAMPLE
+    cp /boot/config-`uname -r`* .config
+#+END_EXAMPLE
+
+** Making the default config
+
+Remember, a default config may not have the options you are currently
+using. Run
+
+#+BEGIN_EXAMPLE
+    make defconfig
+#+END_EXAMPLE
+
+** Making a minimal config
+
+Compiling a kernel from scratch from a distribution configuration can
+take "forever" because the distros turn on every hardware configuration
+possible. For people wanting to do kernel development fast, you want to
+make a minimal configuration. Steve Rostedt uses ktest.pl
+make\_min\_config to get a truely minimum config, but it will take a day
+or two to build. Warning: make sure you have all your USB devices
+plugged into the system, or you won't get the drivers for them!
+
+** Changing your config
+
+If you need to make any changes to your configuration, you can run one
+of the following commands. These require the curses tools to be
+installed.
+
+#+BEGIN_EXAMPLE
+    make menuconfig
+#+END_EXAMPLE
+
+or
+
+#+BEGIN_EXAMPLE
+    make nconfig
+#+END_EXAMPLE
+
+* Building the kernel
+
+Run
+
+#+BEGIN_EXAMPLE
+    make
+#+END_EXAMPLE
+
+Or, if you have a multi-core processor, run
+
+#+BEGIN_EXAMPLE
+    make -jX
+#+END_EXAMPLE
+
+Where X is a number like 2 or 4. If you have a dual core, 2 or 3 might
+be good. Quad core, 4 or 6. Do not run with really big numbers unless
+you want your machine to be dog-slow!
+
+Walk away, get some coffee, lunch, or go [[http://xkcd.com/303/][read
+some comics]].
+
+** Installing the kernel
+
+To install a kernel, you will need to either manually update your GRUB
+configuration file, or have an installkernel script. This script
+installs the kernel to /boot/, installs modules to /lib/modules/X.Y.Z/
+(where X.Y.Z is something like 3.1.5), and updates file
+/boot/grub/grub.conf. Fortunately, Ubuntu provides an installkernel
+script in /sbin/installkernel. The grubby RPM provides it for RPM based
+systems.
+
+If you have an installkernel script, you can just run
+
+#+BEGIN_EXAMPLE
+    sudo make modules_install install
+#+END_EXAMPLE
+
+Or if you don't have sudo installed, run
+
+#+BEGIN_EXAMPLE
+    su -c "make modules_install install"
+#+END_EXAMPLE
+
+** Running your kernel
+
+First, make sure you know how to select a kernel at boot time. If your
+new kernel is broken, you want a way to boot into your old kernel. The
+grub bootloader usually presents users with a choice of kernels and you
+can reboot into a known good kernel if your new compile doesn't work.
+Some distros use a default grub config that hides that menu. You can
+usually get the menu to appear by mashing the ESC key during boot after
+the BIOS display disappears.
+
+Ubuntu: To make the grub menu always appear on boot under Ubuntu, remove
+the GRUB\_HIDDEN\_TIMEOUT\_QUIET line from /etc/default/grub. You may
+want to increase the GRUB\_DEFAULT timeout from 0 to 15 seconds or more.
+After you've finished editing the grub file you may need to update your
+grub file.
+
+#+BEGIN_EXAMPLE
+    sudo update-grub2
+#+END_EXAMPLE
+
+You will (usually) need to reboot into your new kernel.
+
+* Patching your kernel
+
+There are several ways to apply a patch to your kernel. Usually the
+maintainer will send you a patch as attachment, or inline in the mail.
+You should either save the file, or copy and paste the patch into a new
+file.
+
+To apply the patch, go to the base kernel directory and run
+
+#+BEGIN_EXAMPLE
+    git am patchfile
+#+END_EXAMPLE
+
+Where patchfile is the file you saved. If patch fails, you can run:
+
+#+BEGIN_EXAMPLE
+    git am --abort
+    git reset --hard HEAD
+    git am -3 patchfile
+#+END_EXAMPLE
+
+This applies the patch, and attempts to run a three-way merge if the
+patch application fails. If all else fails, you can attempt to duplicate
+the patch changes by hand.
+
+Then you need to re-build your kernel and reboot.
+
+(Note: the older way of manually patching the kernel with
+=patch -p1 <patchfile= does not create any git history, which makes it
+hard to revert and retry different patches. You will often have to go
+through several patches with a maintainer to find the right fix for a
+bug, so having the git history is useful.)
+
+* Reverting a patch
+
+If a maintainer wants you to revert a patch you have applied, and try a
+different patch, you can use git to reset the history to the point
+before the patch was applied.
+
+If =git log= shows the patch to be removed is the first log entry, you
+can run
+
+#+BEGIN_EXAMPLE
+    git reset --hard HEAD^
+#+END_EXAMPLE
+
+If you need to revert several patches, you can use git log to find the
+commit ID of the first commit before those patches. For instance, say
+you have applied two patches to the stable tree 3.4.17, and you want to
+revert those patches. =git log= will look like this:
+
+#+BEGIN_EXAMPLE
+    $ git log --pretty=oneline --abbrev-commit
+    8901234 Testing patch 2
+    1234567 Testing patch 1
+    5390967 Linux 3.4.17
+    1f94bd4 drm/i915: no lvds quirk for Zotac ZDBOX SD ID12/ID13
+    0187c24 x86, mm: Use memblock memory loop instead of e820_RAM
+    a0419ca staging: comedi: amplc_pc236: fix invalid register access during detach
+#+END_EXAMPLE
+
+To reset your tree to 3.4.17, you can run:
+
+#+BEGIN_EXAMPLE
+    git reset --hard 5390967
+#+END_EXAMPLE
+
+If you look at the commits with =gitk= you will notice that the 3.4.17
+commit is also tagged as v3.4.17. You can reset by tag as well:
+
+#+BEGIN_EXAMPLE
+    git reset --hard v3.4.17
+#+END_EXAMPLE
+
+* Tips and Tricks
+
+If you have a driver installed as a module, you can recompile just that
+driver. This saves time, because the kernel build system doesn't have to
+look for changes across the entire kernel tree or compile any of the
+built-in code.
+
+All module files end with .ko. The kernel make system will compile just
+one .ko file if you give it the full path to the file:
+
+#+BEGIN_EXAMPLE
+    make drivers/usb/host/xhci-hcd.ko
+#+END_EXAMPLE
+
+Note you will need to be in the base kernel source directory for this to
+work. You can't make from a different directory.
+
+You can also reload drivers without rebooting your kernel. For example,
+I can remove the xHCI driver and reload it with
+
+#+BEGIN_EXAMPLE
+    sudo rmmod xhci-hcd && sudo insmod drivers/usb/host/xhci-hcd.ko
+#+END_EXAMPLE
+
+Make sure that you understand the consequences of unloading your driver!
+For instance, if you unload the USB core driver in order to try out
+changes, your USB mouse and keyboard aren't going to work until the USB
+core driver is reloaded.
+
+You may have to unload other drivers that depend on your driver before
+you can reload it. Use lsmod to find which drivers that are loaded
+depend on your driver. E.g.
+
+#+BEGIN_EXAMPLE
+    $ lsmod | grep usb
+    usbnet                 26596  2 rndis_host,cdc_ether
+    mii                     5198  1 usbnet
+    btusb                  16575  0 
+    usbhid                 44621  1 hid_logitech
+    usbcore               191078  9 xhci_hcd,rndis_host,cdc_ether,usbnet,btusb,uvcvideo,usbhid,ehci_hcd
+    usb_common              1093  1 usbcore
+#+END_EXAMPLE
+
+In this case, usbcore is used by xhci\_hcd, rndis\_host, cdc\_ether,
+usbnet, btusb, uvcvideo, usbhid, and ehci\_hcd. I would have to unload
+all those drivers in order to reload the usbcore module.
+

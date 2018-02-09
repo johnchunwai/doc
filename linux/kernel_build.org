@@ -1,5 +1,6 @@
 
-Guide to building the Linux kernel.
+* Guide to building the Linux kernel.
+From https://kernelnewbies.org/KernelBuild
 
 * Where do I find the kernel?
 

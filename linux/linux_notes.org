@@ -18,6 +18,19 @@ export LS_COLORS
 
 PS1='\[\e[37;1m\]\u@\[\e[35m\]\W\[\e[0m\]\$ '
 #+END_SRC
+
+* bashrc tweaks
+** share history among terminals
+#+BEGIN_SRC 
+# append to the history file, don't overwrite it
+shopt -s histappend
+PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}history -a; history -c; history -r"
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+#+END_SRC
+
 * initialization
 #+BEGIN_SRC 
 sudo apt-get update

@@ -1,0 +1,93 @@
+* Useful Ex mode commands
+#+BEGIN_SRC 
+# checks all files for modification outside of vim
+:checkt(ime)
+# search and replace
+:s/search/replace/flags
+where flags=g (all on curr line)
+# jump to next build err
+:cn(ext)
+# jump to prev build err
+:cp(rev)
+# run make in curr dir
+:mak(e args)
+# command format
+:[beginline],[endline][command]
+where
+.    # curr line
+$    # last line
+%    # entire file
+1,$  # entire file
+'a   # location of mark a
+#+END_SRC
+
+* Cursor move commands
+#+BEGIN_SRC 
+ctl-]     # jmp to tag (ctags)
+ctl-t     # jmp back from tag
+w         # fwd a word
+b         # back a word
+^         # begin of line
+$         # end of line
+xG        # go to line x
+gg        # go to 1st line
+G         # go to EOF
++         # down and 1st non-blank char
+-         # up and 1st non-blank char
+%         # jmp to matching brace
+[[        # back to first {
+]]        # fwd to next {
+f{char}   # to right of next {char}
+t{char}   # to the left of next {char}
+'{m}      # jmp to mark m
+''        # return to last jump
+ctl-f     # page down
+ctl-b     # page up
+#+END_SRC
+
+* Insert and change
+#+BEGIN_SRC 
+i/a   # insert/append
+I     # insert before 1st char in line
+A     # insert after last char in line
+o     # insert next line
+O     # insert prev line
+S     # substitute whole line
+C     # change from cursor till the EOL
+c{motion}    # delete cursor to motion and insert
+{N}s         # change from cursor up to next N char
+#+END_SRC
+
+* Cut & Paste
+#+BEGIN_SRC 
+d{motion}    # cut from cursor to next motion
+dd           # cut line
+D            # cut from cursor to EOL
+y{motion}    # cp from cursor to next motion
+yy           # cp line
+Y            # cp from cursor to EOL
+p            # paste after cursor
+P            # paste before cursor
+:reg         # list all registers (previous cut/yank)
+"1p then u's # paste the last yank and cycle thru previous entries
+"{N}p/P      # paste the Nth entry
+#+END_SRC
+
+* Block edit
+#+BEGIN_SRC 
+ctl-v          # enter visual block
+               # move cursor up and down
+shift-{cmd}    # eg. shift-I to go to insert mode
+               # type insert chars (only show in one line)
+esc            # exit visual block mode and apply changes to whole block
+#+END_SRC
+
+* Misc commands
+#+BEGIN_SRC 
+u        # undo
+ctl-r    # redo
+.        # repeat last cmd
+m{char}  # set a bookmark labeled {char}
+ctl-L    # redraw screen
+zt/z/b   # redraw and place cursor at top, mid, bottom of screen
+#+END_SRC

@@ -1,3 +1,7 @@
+* .vimrc
+#+BEGIN_SRC 
+set background=dark
+#+END_SRC
 * Useful Ex mode commands
 #+BEGIN_SRC 
 # checks all files for modification outside of vim

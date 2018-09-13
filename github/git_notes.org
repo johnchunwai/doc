@@ -2,14 +2,12 @@ git config --global user.name "YOUR NAME"
 git config --global user.email "name@users.noreply.github.com"
 git config --global credential.helper wincred
 
-git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
-
-OR
-
+#+BEGIN_SRC 
 git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 git lg
 git lg --all
 git lg -p
+#+END_SRC
 
 https://git-scm.com/blog
 

@@ -202,3 +202,87 @@ df -h
 #+BEGIN_SRC 
 sudo -E env "PATH=$PATH" <command> <args>
 #+END_SRC
+
+* CentOS
+** set up centos on vbox
+#+BEGIN_SRC 
+create machine in vbox for:
+- redhat 64bit
+- (optional) may have to disable 3d acceleration or it breaks guest additions
+- NAT
+
+mount centos iso and install:
+- choose timezone
+- development workstation type
+- turn on nic (default is off)
+#+END_SRC
+** post install
+#+BEGIN_SRC 
+# add keyboard shortcut for terminal
+# find keyboard shortcut in system setting
+# add a shortcut for gnome-terminal
+
+# launch a terminal and edit->prefernce to select dark theme
+
+# create user if not done yet
+# as root
+adduser <username>
+passwd <pwd>
+usermod -aG wheel <username>
+
+visudo
+# search for wheel and uncomment the line that allows wheel for full access
+# for convenience, you could uncomment the no password line too, less secure
+
+# test sudo
+su - <username>
+sudo whoami
+
+# logout and re-login as the new user
+
+# prepare for vbox guest additions
+# the following makes reinstall of guest additions not necessary upon os update
+# copy the link to the latest epel from https://fedoraproject.org/wiki/EPEL
+sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+# -y assume yes to prompts
+sudo yum -y install gcc kernel-devel kernel-headers dkms make bzip2 perl
+## Current running kernel on Fedora 28/27/26/25/24/23/22, CentOS 7/6 and Red Hat (RHEL) 7/6 ##
+KERN_DIR=/usr/src/kernels/`uname -r`/build
+export KERN_DIR
+
+# now, install guest additions
+# if it complains about missing some kernel-devel packages or so, install those first and re-run
+
+# optional
+reboot
+
+#+END_SRC
+
+** install other software to match environment boxes
+#+BEGIN_SRC 
+# make ssh works
+# in vbox machine network settings, add port forwarding rules:
+- name: ssh
+- host/guest port: 22
+# test
+# from host:
+ssh <vbox adapter ip> (mine is 192.168.56.1)
+
+# install oracle jdk (change jdk version to match environment
+curl -L -b "oraclelicense=a" -O http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.rpm
+sudo yum localinstall jdk-10.0.2_linux-x64_bin.rpm
+
+# if not already done, select the default version of java
+sudo alternatives --config java
+sudo alternatives --config javac
+
+# set JAVA_HOME and add path
+# add to .bash_profile:
+export JAVA_HOME=/usr/java/jdk-10.0.2
+export JRE_HOME=$JAVA_HOME/jre
+
+PATH=$PATH:$HOME/bin:$JAVA_HOME/bin
+
+export PATH
+
+#+END_SRC

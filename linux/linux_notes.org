@@ -55,6 +55,9 @@ if [ -f "${SSH_ENV}" ]; then
 else
     start_agent;
 fi
+
+# After the above, just for example:
+# ssh-add ~/.ssh/id_dsa_github
 #+END_SRC
 
 * initialization

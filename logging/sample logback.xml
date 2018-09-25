@@ -1,0 +1,252 @@
+<!-- Use this when needed to diagnose logback.xml config issues -->
+<!--<configuration debug="true" scan="true" scanPeriod="60 seconds">-->
+<!-- scan causes logback to rescan the configuration periodically so we can tweak log setting without restarting -->
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <!--
+     Properties
+      -->
+    <!-- %d means date, class{0} splits out simple class name, msg is log msg, ex logs exception is default -->
+    <property name="default_pattern" value="%d{yyyy-MM-dd HH:mm:ss} type=%class{0}, %msg%n"/>
+    <!-- nopex strips exception logging -->
+    <property name="app_appender_pattern" value="${default_pattern}%nopex"/>
+    <property name="raw_event_pattern" value="%msg%n"/>
+    <!-- actually pattern will be done by code which is topic={}, livestats={} -->
+    <property name="livestats_pattern" value="%d{yyyy-MM-dd HH:mm:ss} %msg%n"/>
+    <!--
+     Property env is specified in YAML and set as system property by code in Application.main
+     For local, we log exceptions in main applog and also log to console at the same time.
+     For non-local, we only log a single line per log entry in applog for easy splunk ingestion. Exceptions are splitted
+     to a separate errlog. We don't log to console.
+    -->
+    <if condition='property("env").equals("local")'>
+        <then>
+            <property name="log_home" value="C:/windows-log-path"/>
+        </then>
+        <else>
+            <property name="log_home" value="/opt/linux-log-path"/>
+        </else>
+    </if>
+
+    <!--
+    App logger settings
+    -->
+    <appender name="stdout-appender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${default_pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="app-appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_home}/app.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_home}/app-%d{yyyy-MM-dd-HH}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>48</maxHistory>
+            <totalSizeCap>750MB</totalSizeCap>
+        </rollingPolicy>
+        <!-- we want to tag certain logs will always log regardless of log level -->
+        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+            <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                <marker>important</marker>
+            </evaluator>
+            <OnMatch>ACCEPT</OnMatch>
+            <!-- if it is not tagged as important, the next filter will handle it -->
+            <OnMismatch>NEUTRAL</OnMismatch>
+        </filter>
+        <if condition='property("env").equals("prod")'>
+            <then>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>ERROR</level>
+                </filter>
+            </then>
+            <else>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>INFO</level>
+                </filter>
+            </else>
+        </if>
+        <encoder>
+            <pattern>${app_appender_pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="err-appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_home}/err.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_home}/err-%d{yyyy-MM-dd-HH}.%i.log.gz</fileNamePattern>
+            <maxFileSize>200MB</maxFileSize>
+            <maxHistory>48</maxHistory>
+            <totalSizeCap>1000MB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${default_pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <if condition='property("env").equals("local")'>
+        <then>
+            <root level="debug">
+                <appender-ref ref="app-appender"/>
+                <appender-ref ref="err-appender"/>
+                <appender-ref ref="stdout-appender"/>
+            </root>
+        </then>
+        <else>
+            <root level="debug">
+                <appender-ref ref="app-appender"/>
+                <appender-ref ref="err-appender"/>
+            </root>
+        </else>
+    </if>
+
+
+    <!--
+    Unsent logger settings
+    The sift appender allows us to have the same logger logs to different files based on a discriminator key specified
+    at runtime (through MDC) in src code. We use the event topic as the key.
+    For unsent (failed to sent to splunk) events, we have 2 separate loggers to handle them. One is the default and one
+    is for high volume event topic. The differences are file size cap and rolling policies.
+    The logger to use is configured in YAML file under the TcpForwarderSink for a particular group/topic.
+    -->
+    <appender name="unsent-default-appender" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <!-- logger for individual topics should stay alive as long as possible -->
+        <timeout>365 days</timeout>
+        <!-- this should be larger than the max possible topics we subscribe to -->
+        <maxAppenderCount>30</maxAppenderCount>
+        <!-- in the absence of the class attribute, it is assumed that the
+             desired discriminator type is
+             ch.qos.logback.classic.sift.MDCBasedDiscriminator -->
+        <discriminator>
+            <key>topic</key>
+            <defaultValue>ignore</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="unsent-default-${topic}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${log_home}/${topic}/unsent.log</file>
+                <append>true</append>
+                <immediateFlush>true</immediateFlush>
+
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${log_home}/${topic}/unsent-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                    <maxFileSize>150MB</maxFileSize>
+                    <maxHistory>10</maxHistory>
+                    <totalSizeCap>500MB</totalSizeCap>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>${raw_event_pattern}</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+    <logger name="unsent-default" level="info" additivity="false">
+        <appender-ref ref="unsent-default-appender"/>
+    </logger>
+
+    <appender name="unsent-high-vol-appender" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <!-- logger for individual topics should stay alive as long as possible -->
+        <timeout>365 days</timeout>
+        <!-- this should be larger than the max possible topics we subscribe to -->
+        <maxAppenderCount>30</maxAppenderCount>
+        <!-- in the absence of the class attribute, it is assumed that the
+             desired discriminator type is
+             ch.qos.logback.classic.sift.MDCBasedDiscriminator -->
+        <discriminator>
+            <key>topic</key>
+            <defaultValue>ignore</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="unsent-high-vol-${topic}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${log_home}/${topic}/unsent.log</file>
+                <append>true</append>
+                <immediateFlush>true</immediateFlush>
+
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${log_home}/${topic}/unsent-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                    <maxFileSize>250MB</maxFileSize>
+                    <maxHistory>10</maxHistory>
+                    <totalSizeCap>1500MB</totalSizeCap>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>${raw_event_pattern}</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+    <logger name="unsent-high-vol" level="info" additivity="false">
+        <appender-ref ref="unsent-high-vol-appender"/>
+    </logger>
+
+
+    <!--
+    Livestats logger settings
+    This is a simple rolling file that contains one line per statistics periodically.
+    -->
+    <appender name="livestats-appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_home}/livestats.log</file>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${log_home}/livestats-%d{yyyy-MM-dd-HH}.%i.log.gz</fileNamePattern>
+            <maxFileSize>1MB</maxFileSize>
+            <maxHistory>500</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${livestats_pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="livestats" level="info" additivity="false">
+        <appender-ref ref="livestats-appender"/>
+    </logger>
+
+
+    <!--
+    Filesink logger settings
+    This is a simple rolling file sink that blindly logs all events for testing purpose only. Log retention is low.
+    -->
+    <appender name="filesink-appender" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <!-- logger for individual topics should stay alive as long as possible -->
+        <timeout>365 days</timeout>
+        <!-- this should be larger than the max possible topics we subscribe to -->
+        <maxAppenderCount>50</maxAppenderCount>
+        <!-- in the absence of the class attribute, it is assumed that the
+             desired discriminator type is
+             ch.qos.logback.classic.sift.MDCBasedDiscriminator -->
+        <discriminator>
+            <key>topic</key>
+            <defaultValue>ignore</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="filesink-${topic}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${log_home}/filesink-${topic}.log</file>
+                <append>true</append>
+                <immediateFlush>true</immediateFlush>
+
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${log_home}/filesink-${topic}-%d{yyyy-MM-dd-HH}.%i.log.gz</fileNamePattern>
+                    <maxFileSize>10MB</maxFileSize>
+                    <maxHistory>5</maxHistory>
+                    <totalSizeCap>100MB</totalSizeCap>
+                    <cleanHistoryOnStart>true</cleanHistoryOnStart>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>${raw_event_pattern}</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+    <logger name="filesink" level="info" additivity="false">
+        <appender-ref ref="filesink-appender"/>
+    </logger>
+</configuration>

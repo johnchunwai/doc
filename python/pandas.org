@@ -1,0 +1,71 @@
+* Pandas Notes
+** Basics
+#+BEGIN_SRC 
+import pandas as pd
+
+# read csv that:
+# has | instead of , as separator
+# no header row
+df = pd.read_csv("data.csv", sep = "|", names = ["Name", "Surname", "Height", "Weight"])
+
+# show first few rows
+df.head()
+
+# show column names, types, counts info
+df.info()
+
+# show useful statistics
+# include special stats for cols that are not numeric
+include_list = ['object', 'float64', 'int64']
+df.describe(include=include_list)
+#+END_SRC
+** Getter
+#+BEGIN_SRC 
+# get first 10 rows
+df[0:10]
+
+# get the 4th (0 based) row
+df.iloc[3]
+
+# set the Name col as the index and select by that
+# by default, index is numeric which will be the same as iloc
+df.set_index('Name')
+df.loc['Name']
+
+# get the 'Age' col
+df['Age']
+
+# get first 5 records of Age col
+df[0:5]['Age']
+
+# get the Age and Sex col for a few names
+df.loc[['John Doe', 'Mary Jane'], ['Age', 'Sex']]
+
+#+END_SRC
+** Handle columns
+#+BEGIN_SRC 
+# list col names
+cols = df.columns
+for col in cols:
+    print(col)
+
+# remove the Parch and SibSp col from dataframe
+df = df.drop(['Parch', 'SibSp'], axis=1)
+
+# list the index values
+# could print numbers by default or the values of index we set
+df.index.values
+
+#+END_SRC
+** Unique and counts
+#+BEGIN_SRC 
+# list all unique values for Cabin
+df['Cabin'].unique()
+
+# count the number of unique values for Cabin
+df['Cabin'].nunique()
+
+# list all unique values and the counts for each
+df['Cabin'].value_counts()
+
+#+END_SRC

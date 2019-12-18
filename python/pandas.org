@@ -8,6 +8,9 @@ import pandas as pd
 # no header row
 df = pd.read_csv("data.csv", sep = "|", names = ["Name", "Surname", "Height", "Weight"])
 
+# write to csv
+df.to_csv(path_or_buf=os.path.join(r'c:\junk', 'output.csv'), header=True, index=False)
+
 # show first few rows
 df.head()
 
@@ -41,6 +44,12 @@ df[0:5]['Age']
 # get the Age and Sex col for a few names
 df.loc[['John Doe', 'Mary Jane'], ['Age', 'Sex']]
 
+# filter by Age
+df[df['Age'] != 3]
+
+# filter by Age not in a list
+df[~df['Age'].isin([3, 4, 6])]
+
 #+END_SRC
 ** Handle columns
 #+BEGIN_SRC 
@@ -69,3 +78,4 @@ df['Cabin'].nunique()
 df['Cabin'].value_counts()
 
 #+END_SRC
+

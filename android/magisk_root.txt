@@ -1,0 +1,138 @@
+Installing fastboot and adb
+
+Thankfully, Google has provided just adb, fastboot, and systrace as a simple zip file, making this process super easy. You MUST be on at LEAST 26.0.2 for the commands in this guide to work. When in doubt, grab the latest copy and install them using the following instructions.
+
+    SDK Platform-Tools for Windows
+    SDK Platform-Tools for Mac
+    SDK Platform-Tools for Linux
+
+
+Windows:
+
+    Unzip the folder somewhere on your hard drive.
+    Go to the folder containing the adb and fastboot files and type "cmd" in the path bar at the top.
+    A command prompt should open with the current folder showing on the prompt.
+    Type the following commands:
+    Code:
+
+    adb --version
+    fastboot --version
+
+    You should see some information appear. If that is the case, you were successful!
+
+
+
+
+Unlocking the bootloader
+
+WARNING: This WILL wipe your entire phone. Please make copies or backups of any important data. This can also go wrong rendering your device inoperable. Proceed with caution.
+
+    On your phone, open Settings, navigate to "System" then "About phone", and tap on the build number 7 times.
+    Go one menu up, click on "Developer options", and turn on USB debugging and OEM unlocking.
+    In your terminal, type the following command:
+	
+    adb reboot bootloader
+
+    Next, decide if you want to do a standard unlock or critical unlock. A critical unlock allows you to directly flash bootloader files, otherwise you will get an error when you try to do so.
+    Depending on what you decided in the previous step, run one of the following commands:
+
+    fastboot flashing unlock
+    fastboot flashing unlock_critical
+
+    Follow the prompts on your device then reboot!
+
+
+
+Flashing factory images
+
+NOTE #1: You CANNOT downgrade factory images. Google has prevented users from doing so to keep them safe from vulernabilities that were patched. You should only upgrade or reinstall the current image.
+
+NOTE #2: If you have mounted /system as rw at any point (like in TWRP), you must upgrade using the factory image method. OTAs will fail because they cannot verify the integrity of the disk since its verity data has been changed.
+
+Updating to a new release (factory image):
+
+    Download the latest factory image from Google's website.
+
+    adb reboot bootloader
+
+    Unzip the factory image.
+    Inside you will see a bootloader image, a radio image, an image zip file, and a couple of flash scripts.
+    If you are on Windows, open the "flash-all.bat" file in a text editor. If you are on Mac or Linux, open the "flash-all.sh" instead.
+    Remove the "-w" flag before the fastboot command towards the end of the file. This will prevent fastboot from formatting your device.
+    Run the flash all script! Open a command prompt, navigate to the folder with the script, and run one of the following commands:
+    Windows:
+    Code:
+
+    flash-all
+
+    Reboot once it is finished!
+
+
+Rooting with Magisk
+
+    Download the Magisk Manager from the official thread and install it.
+    Grab a boot image to patch (either the one from the latest factory image or a custom kernel one) and push it to your device:
+	 - unzip the factory image and unzip the unzipped one again to find boot.img
+    Code:
+
+    adb push <path_to_file> /sdcard/Download
+
+	Settings -> add permission for Magisk to install app from anywhere
+	Developer options -> disable auto update
+	Dev options -> enable usb debug
+	Set up wifi connection
+    Open Magisk Manager
+	Options -> use Beta channel instead of stable
+	click the Install button.
+    Click "Install" at the first prompt then choose "Patch Boot Image File". A file manager will pop up.
+    Select the boot image you want to patch and let Magisk Manager patch it.
+    Pull it off your device:
+    Code:
+
+    adb pull /sdcard/MagiskManager/patched_boot.img
+    adb reboot bootloader
+    fastboot flash boot patched_boot.img
+    fastboot reboot
+
+    Open Magisk Manager and you should be rooted!
+	
+Install TWRP
+	https://twrp.me/google/googlepixel2xl.html
+	If you already have TWRP installed: Download the latest zip and install the zip using TWRP.
+
+	If you do not already have TWRP installed: Download both the img and the zip. You will need to have fastboot binaries and the correct drivers installed. Power off your device completely. Hold volume down and turn on the device. Your device should now be in the bootloader. Connect the device to your PC. Open a command window and run the following command from the proper location:
+
+	fastboot boot path/to/twrp.img
+
+	This will temporarily boot TWRP on your device. Use adb to push the zip onto your device:
+
+	adb push path/to/twrp.zip /
+
+	Go to install and browse to the zip and install the zip. The zip will install TWRP to both boot slots. Installing TWRP at this time will remove root if you are currently rooted.
+
+	If you accidently flash TWRP to your device using fastboot instead of temporarily booting the image, you will need to download the latest factory image for your device and reflash the boot image.
+	
+Update Android versions
+
+	*Copy TWRP zip and latest Magisk zip to phone
+
+	1) Download full factory image for Pixel 2 XL (Tiamen) - https://developers.google.com/android/ota#taimen
+
+
+	2) Extract to Downloads folder <-- This is specific to me as someone else may save it elsewhere
+
+	3) Edit the flash-all.bat to remove the -w flag so data isn't wiped. SAVE!!
+
+	4) Boot into bootloader (from the phone or adb), connect phone to PC, 
+	open cmd prompt from Downloads\platform-tools-latest-windows\platform-tools (type cmd
+	in the address bar and press enter) <-- Specific to my PC as someone else may have their fastboot folder saved elsewhere
+
+	5) Run flash-all script by doing flash-all in fastboot command prompt (navigate to Downloads first)
+
+	5.5) Reboot into bootloader via adb reboot bootloader in fastboot cmd prompt
+
+	5.6) Temporariy put TWRP.img directly on C: (makes next step easier)
+
+	6) Boot into TWRP via fastboot cmd prompt & fastboot boot path/to/twrp.img
+
+	7) In TWRP, flash the TWRP zip then Magisk zip

@@ -1,0 +1,32 @@
+0) nandroid backup
+0.1) download twrp latest version for your device (ZIP)
+0.2) reboot to recovery
+0.3) install the zip
+0.4) reboot to recovery
+0.5) backup -> system, boot, data (eg. /data/media/0/TWRP/BACKUPS/710KPXXXXXX/1972-02-02--16-50-47_OPM1171019013)
+1) download latest android platform tools
+2) download android firmware (not OTA) from google
+3) download latest TWRP (img AND installer) from twrp.me
+4) download latest Magisk from XDA
+5) download latest Magisk uninstaller from XDA
+6) launch magisk and check that if any modules are installed, either update to latest or disable them or phone may not boot on update
+7) extract android firmware
+8) connect phone to pc with usb
+9) adb reboot bootloader
+10) fastboot devices (should see our device connected)
+11) fastboot flash bootloader "<path to bootloader-XXX.img from android firmware extracted folder>"
+12) fastboot reboot bootloader
+13) fastboot flash radio "<path to radio-XXX.img from android firmware extracted folder>"
+14) fastboot reboot bootloader
+15) fastboot --skip-reboot update "<path to image-XXX.zip from android firmware extracted folder>"
+16) fastboot boot "<path to twrp-XXX.img>" (it may not be able to decrypt data paritition, cancel->swipe to allow mod)
+[optional begin]
+17) Install -> twrp-XXX.zip
+OR
+17) Advanced -> ADB Sideload -> swipe to start
+18) adb sideload twrp-XXX.img (or zip?)
+19) reboot into TWRP (do NOT install TWRP as system app)
+[optional end]
+19) Advanced -> ADB Sideload -> swipe to start
+20) adb sideload Magisk-XXX.zip
+21) reboot (do NOT install twrp as system app)

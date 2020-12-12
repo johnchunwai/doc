@@ -1,0 +1,29 @@
+* Initialization
+{} init avoid implicit conversion compared to = initialization.
+Exception for auto.
+#+BEGIN_SRC 
+int i = 7.8;	// i becomes 7
+int i {7.8};	// error: floating-point to integer conversion
+auto i = 7.8;	// no implicit conversion as auto retains the type as double
+auto i {7.8};	// more consistent syntax
+
+#+END_SRC
+
+* Constants
+constexpr - evaluated at compile time
+constexpr functions
+- can accept non-const args but the result is not a constexpr (so we don't need to duplicate a function for both constexpr and non constexpr use)
+- cannot have side effects (no changes to non-local variables
+
+* Misc
+- variable can be defined in if statements and has scope for both if and else block
+#+BEGIN_SRC 
+if (auto x = v.size(); x != 0) {
+	// works like for
+}
+
+if (auto x = v.size()) {
+	// similar to above but implicit check for x != 0. Basically similar to if (x)
+}
+
+#+END_SRC

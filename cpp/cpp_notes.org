@@ -10,7 +10,7 @@ auto i {7.8};	// more consistent syntax
 #+END_SRC
 
 * Deducing types
-
+  
 ** template type deduction
 #+BEGIN_SRC 
 template<typename T>
@@ -23,7 +23,7 @@ f(expr);	// deduce T and ParamType from expr
 1) ParamType is ptr/ref, NOT universal ref
    - expr is ref, ignore the ref part
    - match expr's type against ParamType to determine T
-#+BEGIN_SRC 
+   #+BEGIN_SRC 
 template<typename T>
 void f(T& param);
 
@@ -44,7 +44,8 @@ const int *px = &x;
 f(x);	// T int, param int*
 f(px);	// T const int, param const T*
 
-#+END_SRC
+   #+END_SRC
+
 2) ParamType is universal ref
 3) ParamType is NOT ptr/ref
 

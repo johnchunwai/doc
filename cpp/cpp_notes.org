@@ -12,6 +12,13 @@ auto i {7.8};	// more consistent syntax
 * Deducing types
   
 ** template type deduction
+
+In general:
+- args with refs are treated as non-refs
+- universal refs, lvalue args have special treatment
+- by val params, const/volatile are treated as non-const/non-volatile
+- array/function params decays to pointers unless param type is ref
+
 #+BEGIN_SRC 
 template<typename T>
 void f(ParamType param);
@@ -47,8 +54,99 @@ f(px);	// T const int, param const T*
    #+END_SRC
 
 2) ParamType is universal ref
-3) ParamType is NOT ptr/ref
+   - expr is lvalue, T/ParamType are lvalue ref
+   - expr is rvalue, same as Case 1
+   #+BEGIN_SRC 
+template<typename T>
+void f(T&& param);
 
+int x = 27;
+const int cx = x;
+const int& rx = x;
+
+f(x);	// T/param -> int&
+f(cx);	// T/param -> const int&
+f(rx);	// T/param -> const int&
+
+f(27);	// T is int, param is int&&
+   #+END_SRC
+
+3) ParamType is NOT ptr/ref
+   - if param is ref, ignore 
+   - if param is const, ignore
+   - if param is volatile, ignore
+   #+BEGIN_SRC 
+template<typename T>
+void f(T param);
+
+int x = 27;
+const int cx = x;
+const int& rx = x;
+
+f(x);	// T/param -> int
+f(cx);	// same as above
+f(rx);	// same as above
+
+const char* const ptr = "fun";
+
+f(ptr);	// T/param -> const char*
+   #+END_SRC
+
+*** Array args for template type deduction
+- in C and C++, array param decays to pointer
+#+BEGIN_SRC 
+cont char name[] = "John Chan";	// name's type is const char[10]
+const char * ptrToName = name;	// ptrToName is const char*
+
+template<typename T>
+void f(T param);
+
+f(name);	// T/name -> const char*; const char param[] decays is equivalent to const char* as params. Unfortunately decay behavior.
+
+#+END_SRC
+- However, reference to array is a different story
+#+BEGIN_SRC 
+template<typename T>
+void f(T& param);
+
+f(name);	// T is const char[10]; param is const char (&)[10]. Crazy syntax, ref to array size of 10 of const char.
+
+#+END_SRC
+- The above allows us to create compile time method to get array size at compile time.
+#+BEGIN_SRC 
+// no param name as we only care about the array size
+template<typename T, std::size_t N>
+constexpr std::size_t ArraySize(T (&)[N]) noexcept {	// noexcept helps compiler generate better code
+	return N;
+}
+
+// can use to initialize array with same size as another
+int keyVals[] = {1, 3, 4, 7};
+
+int mappedVals[ArraySize(keyVals)];
+
+std::array<int, ArraySize(keyVals)> mappedVals;
+
+#+END_SRC
+
+*** Function args for template type deduction
+- same rule as array, functions decays to pointers
+#+BEGIN_SRC 
+void someFunc(int, double);	// type is void(int, double)
+
+template<typename T>
+void f(T param);
+
+f(someFunc);	// T/param -> void (*)(int, double)
+
+template<typename T>
+void f(T& param);
+
+f(someFunc);	// T/param -> void (&)(int, double)
+
+// rarely makes any diff in practice
+
+#+END_SRC
 
 * Constants
 constexpr - evaluated at compile time

@@ -148,11 +148,26 @@ f(someFunc);	// T/param -> void (&)(int, double)
 
 #+END_SRC
 
+
 * Constants
 constexpr - evaluated at compile time
 constexpr functions
 - can accept non-const args but the result is not a constexpr (so we don't need to duplicate a function for both constexpr and non constexpr use)
 - cannot have side effects (no changes to non-local variables
+
+* smart pointer
+** shared_ptr
+- make_shared(arg) is better than shared_ptr(new MyType(arg)) in most cases because
+  - make_shared allocates the ptr with the ctl block in one single allocation while the other one involves 2 and not stored in samae place
+  - ctl block is not deleted until last of shared_ptr ref and weak_ptr ref are gone
+  - weak_ptr needs the shared_ptr ctrl block to know if ptr is still alive
+  - sharedptr = make_shared(args...) may be better than shared_ptr.reset(new MyPtr(args...))
+
+- weak_ptr ref shared_ptr and need to upgrade to shared_ptr before using it
+- unique_ptr cannot be copied and cheaper than shared_ptr
+
+* container
+- std::array to replace c-style array
 
 * Misc
 - variable can be defined in if statements and has scope for both if and else block

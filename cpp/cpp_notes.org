@@ -168,7 +168,47 @@ constexpr functions
 
 * container
 - std::array to replace c-style array
+- prefer begin(container), end (container) than container.begin(), container.end() because it works on eg. array too.
+* algorithm
+** count & find
+- count, count_if
+- find, find_if, find_if_not, find_first_of
+- search - find for a sub-sequence instead of single element
+- find_end - WRONG naming but it actually searches for sub-sequence towards the end
+- search_n - find for a val repeated n times (n times an element, not sequence), kind of odd naming
+- adjacent_find - just return the first consecutive duplicate items
 
+** sorting
+- sort vs stable_sort
+- upper_bound - 1st element from SORTED container > val
+- lower_bound - 1st element from SORTED container <= val; can be used as a quicker find (uses binary search) than find but need to check for equality afterwards as it could be < val
+- partial_sort
+  - N (size), K (range size to sort)
+  - useful for pagination where you only care about a certain range to be sorted
+  - if K is not magnitudes < N, it could perform worse than sort
+- partial_sort_copy - same as above but the result will be copy to a diff container
+- nth_element - specify a partition point, all elements <= will be on the left, >= will be on the right
+- shuffle
+#+BEGIN_SRC 
+# to use shuffle with random
+
+#include <random>
+random_device randdevice;
+
+# mt19937 is a good generator, every "cool kids" use it :)
+mt19937 generator{randdevice()};
+shuffle(it1, it2, generator);
+
+#+END_SRC
+* lambda
+#+BEGIN_SRC 
+auto name = [capture clause](args...) { expr; }
+
+[=] - auto smart capture *everything by value (everything is smart to only capture things used by the lambda)
+[&] - auto smart catpure *everything by ref
+[a, b, &c, &d] - catpures a and b by val, c and d by ref
+
+#+END_SRC
 * Misc
 - variable can be defined in if statements and has scope for both if and else block
 #+BEGIN_SRC 
@@ -181,3 +221,6 @@ if (auto x = v.size()) {
 }
 
 #+END_SRC
+
+- std::mov(stuff) is just a cast to cast an lvalue to an rvalue
+- noexcept declaration is needed on move constructor and move assignment operator to make them movable in stl containers

@@ -148,12 +148,67 @@ f(someFunc);	// T/param -> void (&)(int, double)
 
 #+END_SRC
 
+
 * Constants
 constexpr - evaluated at compile time
 constexpr functions
 - can accept non-const args but the result is not a constexpr (so we don't need to duplicate a function for both constexpr and non constexpr use)
 - cannot have side effects (no changes to non-local variables
 
+* smart pointer
+** shared_ptr
+- make_shared(arg) is better than shared_ptr(new MyType(arg)) in most cases because
+  - make_shared allocates the ptr with the ctl block in one single allocation while the other one involves 2 and not stored in samae place
+  - ctl block is not deleted until last of shared_ptr ref and weak_ptr ref are gone
+  - weak_ptr needs the shared_ptr ctrl block to know if ptr is still alive
+  - sharedptr = make_shared(args...) may be better than shared_ptr.reset(new MyPtr(args...))
+
+- weak_ptr ref shared_ptr and need to upgrade to shared_ptr before using it
+- unique_ptr cannot be copied and cheaper than shared_ptr
+
+* container
+- std::array to replace c-style array
+- prefer begin(container), end (container) than container.begin(), container.end() because it works on eg. array too.
+* algorithm
+** count & find
+- count, count_if
+- find, find_if, find_if_not, find_first_of
+- search - find for a sub-sequence instead of single element
+- find_end - WRONG naming but it actually searches for sub-sequence towards the end
+- search_n - find for a val repeated n times (n times an element, not sequence), kind of odd naming
+- adjacent_find - just return the first consecutive duplicate items
+
+** sorting
+- sort vs stable_sort
+- upper_bound - 1st element from SORTED container > val
+- lower_bound - 1st element from SORTED container <= val; can be used as a quicker find (uses binary search) than find but need to check for equality afterwards as it could be < val
+- partial_sort
+  - N (size), K (range size to sort)
+  - useful for pagination where you only care about a certain range to be sorted
+  - if K is not magnitudes < N, it could perform worse than sort
+- partial_sort_copy - same as above but the result will be copy to a diff container
+- nth_element - specify a partition point, all elements <= will be on the left, >= will be on the right
+- shuffle
+#+BEGIN_SRC 
+# to use shuffle with random
+
+#include <random>
+random_device randdevice;
+
+# mt19937 is a good generator, every "cool kids" use it :)
+mt19937 generator{randdevice()};
+shuffle(it1, it2, generator);
+
+#+END_SRC
+* lambda
+#+BEGIN_SRC 
+auto name = [capture clause](args...) { expr; }
+
+[=] - auto smart capture *everything by value (everything is smart to only capture things used by the lambda)
+[&] - auto smart catpure *everything by ref
+[a, b, &c, &d] - catpures a and b by val, c and d by ref
+
+#+END_SRC
 * Misc
 - variable can be defined in if statements and has scope for both if and else block
 #+BEGIN_SRC 
@@ -166,3 +221,6 @@ if (auto x = v.size()) {
 }
 
 #+END_SRC
+
+- std::mov(stuff) is just a cast to cast an lvalue to an rvalue
+- noexcept declaration is needed on move constructor and move assignment operator to make them movable in stl containers

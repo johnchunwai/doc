@@ -11,7 +11,7 @@ auto i {7.8};	// more consistent syntax
 
 * Deducing types
   
-** template type deduction
+** Template type deduction
 
 In general:
 - args with refs are treated as non-refs

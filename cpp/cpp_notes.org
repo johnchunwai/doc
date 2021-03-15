@@ -1,6 +1,12 @@
+* Rule of...
+- Rule of 5
+  - if write destructor, also write [copy constructor, copy assignment op, mov constructor, mov assignment op]. Otherwise, destruction causes dangling references
+- Rule of 0
+  - if all member variables manage themselves (eg. vector, unique_ptr), write nothing
+
 * Initialization
 {} init avoid implicit conversion compared to = initialization.
-Exception for auto.
+Except for auto.
 #+BEGIN_SRC 
 int i = 7.8;	// i becomes 7
 int i {7.8};	// error: floating-point to integer conversion
@@ -202,11 +208,12 @@ shuffle(it1, it2, generator);
 #+END_SRC
 * lambda
 #+BEGIN_SRC 
-auto name = [capture clause](args...) { expr; }
+auto name = [capture clause](args...) -> ret_type { expr; }
 
 [=] - auto smart capture *everything by value (everything is smart to only capture things used by the lambda)
 [&] - auto smart catpure *everything by ref
 [a, b, &c, &d] - catpures a and b by val, c and d by ref
+ret_type (eg. double) - optional in case the compile failed to deduce the return type or deduce it wrong
 
 #+END_SRC
 * Misc
@@ -224,3 +231,16 @@ if (auto x = v.size()) {
 
 - std::mov(stuff) is just a cast to cast an lvalue to an rvalue
 - noexcept declaration is needed on move constructor and move assignment operator to make them movable in stl containers
+#+BEGIN_SRC 
+Resource::Resource(Resource&& r) noexcept
+: name(std::move(r.name))
+{}
+
+Resource& Resource::operator=(Resource&& r) noexcept {
+	if (this != &r) {
+		name = std::move(r.name);
+		r.name.clear();
+	}
+	return *this;
+}
+#+END_SRC
